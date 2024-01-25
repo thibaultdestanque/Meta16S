@@ -66,16 +66,31 @@ metadata    = data.frame(read.table("metadata.txt",  sep = "\t", header=T, strin
 
 
 
+###########################
+## Format taxonomy table ##
+###########################
 
-#####################
-## Format taxonomy ##
-#####################
-
+# import column of interest
 taxo_table = Genoscreen_Table_ASV[,c("ASV_ID", "Taxon")]
+
+# Remoove useless info : d__Bacteria => Bacteria;
 taxo_table$Taxon = gsub(" *.__", "", taxo_table$Taxon)
 
 taxo_table_split = cbind(taxo_table$ASV_ID, data.frame(str_split_fixed(taxo_table$Taxon, pattern = ";", n = 7)))
 colnames(taxo_table_split) = c("ASV_ID", "Domain", "Phylum", "Class", "Order", "Family", "Genus", "Specie")
+
+taxo_table = taxo_table_split
+
+
+
+######################
+## Format ASV table ##
+######################
+
+ASV_table = Genoscreen_Table_ASV
+ASV_table$Taxon = NULL
+
+
 
 
 
