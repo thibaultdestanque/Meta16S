@@ -132,26 +132,52 @@ pseq <- phyloseq(OTU, TAX, samples)
 pseq
 pseq@otu_table
 
-
-
 sample_names(pseq)
 rank_names(pseq)
 sample_variables(pseq)
 
+pseq_raw = pseq
+
+## TEST ##
 # Normalize number of reads in each sample using median sequencing depth.
 total = median(sample_sums(pseq))
 standf = function(x, t=total) round(t * (x / sum(x)))
-pseq = transform_sample_counts(pseq, standf)
+pseq_norm1 = transform_sample_counts(pseq, standf)
+## END TEST ##
+
+# Quelques infos utiles avant de se lancer dans les figures
+ntaxa(pseq)
+nsamples(pseq)
+sample_names(pseq)[1:5] 
+rank_names(pseq)  
+sample_variables(pseq)  
+otu_table(pseq)[1:5, 1:5]  
+tax_table(pseq)[1:5, 1:4]
 
 
-plot_bar(pseq, fill = "Phylum")
+# Rarefy the phyloseq object to even depth prior various analysis
+set.seed(1)
+physeq_rarefy <- rarefy_even_depth(pseq, rngseed=1, sample.size=0.9*min(sample_sums(pseq)), replace=F)
+plot_taxa_prevalence(pseq, "Phylum")
+plot_taxa_prevalence(physeq_rarefy, "Phylum")
 
-plot_bar(pseq, fill = "Phylum") + 
+
+
+###########
+# barplot #
+###########
+
+# Composition plot
+plot_bar(physeq_rarefy, fill = "Phylum") + 
   geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
 
 
 
-# Heatmap
+
+###########
+# Heatmap #
+###########
+
 plot_heatmap(pseq, method = "NMDS", distance = "bray")
 
 pseq_abund <- filter_taxa(pseq, function(x) sum(x > total*0.01) > 0, TRUE)
@@ -165,15 +191,42 @@ plot_heatmap(pseq_abund, method = "MDS", distance = "(A+B-2*J)/(A+B-J)",
              taxa.label = "Class", taxa.order = "Class")
 
 
-# Alpha diversity
-plot_richness(pseq, measures=c("Chao1", "Shannon"))
+
+##############
+# Rare curve #
+##############
+
+tab <- otu_table(physeq_rarefy)
+class(tab) <- "matrix" # as.matrix() will do nothing
+## you get a warning here, but this is what we need to have
+tab <- t(tab) # transpose observations to rows
+raremax = min(rowSums(tab))
+rare <- rarecurve(tab, step=100, lwd=2, ylab="Richness", sample = raremax, col = "blue", label=F)
 
 
-# Ordination
+
+###################
+# Alpha diversity #
+###################
+
+plot_richness(pseq, measures=c("observed", "Chao1", "Shannon"))
+
+
+
+##############
+# Ordination #
+##############
+
 pseq.ord <- ordinate(pseq_abund, "NMDS", "bray")
 
-plot_ordination(pseq_abund, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", 
+plot_ordination(pseq, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", 
                 title="OTUs")
+
+plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", 
+                title="OTUs")
+plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Genus", shape= "Genus", 
+                title="OTUs")
+
 
 
 
