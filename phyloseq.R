@@ -168,7 +168,7 @@ plot_taxa_prevalence(physeq_rarefy, "Phylum")
 # barplot #
 ###########
 
-Mygrid = "Wash"
+Mygrid = "Condition"
 
 # Composition plot phylum
 plot_bar(physeq_rarefy, fill = "Phylum") + 
@@ -192,20 +192,40 @@ plot_bar(physeq_rarefy_firmi, x="Genus", fill = "Genus", facet_grid = Mygrid) +
 physeq_rarefy_bacte <- subset_taxa(physeq_rarefy, Phylum %in% c("Bacteroidota"))
 plot_bar(physeq_rarefy_bacte, x="Genus", fill = "Genus", facet_grid = Mygrid) +
   geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack") +
-  ggtitle(paste0("Firmicutes subset - focus Genus - Condition:", Mygrid))
+  ggtitle(paste0("Bacteroidota subset - focus Genus - Condition:", Mygrid))
 
 # Composition plot - Synergistota subset and focus on Genus
 physeq_rarefy_syne <- subset_taxa(physeq_rarefy, Phylum %in% c("Synergistota"))
 plot_bar(physeq_rarefy_syne, x="Genus", fill = "Genus", facet_grid = Mygrid) +
   geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack") +
-  ggtitle(paste0("Firmicutes subset - focus Genus - Condition:", Mygrid))
+  ggtitle(paste0("Synergistota subset - focus Genus - Condition:", Mygrid))
 
 # Composition plot - Actinobacteriota subset and focus on Genus
 physeq_rarefy_actino <- subset_taxa(physeq_rarefy, Phylum %in% c("Actinobacteriota"))
 plot_bar(physeq_rarefy_actino, x="Genus", fill = "Genus", facet_grid = Mygrid) +
   geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack") +
-  ggtitle(paste0("Firmicutes subset - focus Genus - Condition:", Mygrid))
+  ggtitle(paste0("Actinobacteriota subset - focus Genus - Condition:", Mygrid))
 
+# Composition plot - Proteobacteria subset and focus on Genus
+physeq_rarefy_p <- subset_taxa(physeq_rarefy, Phylum %in% c("Proteobacteria"))
+plot_bar(physeq_rarefy_p, x="Genus", fill = "Genus", facet_grid = Mygrid) +
+  geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack") +
+  ggtitle(paste0("Proteobacteria subset - focus Genus - Condition:", Mygrid))
+
+
+## Species
+
+# Composition plot - Proteobacteria subset and focus on Specie
+physeq_rarefy_p <- subset_taxa(physeq_rarefy, Phylum %in% c("Proteobacteria"))
+plot_bar(physeq_rarefy_p, x="Specie", fill = "Specie", facet_grid = Mygrid) +
+  geom_bar(aes(color=Specie, fill=Specie), stat="identity", position="stack") +
+  ggtitle(paste0("Proteobacteria subset - focus Specie - Condition:", Mygrid))
+
+# Composition plot - Firmicutes subset and focus on Specie
+physeq_rarefy_firmi <- subset_taxa(physeq_rarefy, Phylum %in% c("Firmicutes"))
+plot_bar(physeq_rarefy_firmi, x="Specie", fill = "Specie", facet_grid = Mygrid) +
+  geom_bar(aes(color=Specie, fill=Specie), stat="identity", position="stack") +
+  ggtitle(paste0("Firmicutes subset - focus Specie - Condition:", Mygrid))
 
 
 ###########
