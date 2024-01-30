@@ -105,6 +105,7 @@ colnames(ASV_table) = gsub("[0-9]-", "", colnames(ASV_table))
 head(ASV_table)
 
 
+
 ###########################
 ## Build phyloseq object ##
 ###########################
@@ -167,10 +168,27 @@ plot_taxa_prevalence(physeq_rarefy, "Phylum")
 # barplot #
 ###########
 
-# Composition plot
+# Composition plot phylum
 plot_bar(physeq_rarefy, fill = "Phylum") + 
   geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
 
+# Composition plot family
+plot_bar(physeq_rarefy, fill = "Family") + 
+  geom_bar(aes(color=Family, fill=Family), stat="identity", position="stack")
+
+# Composition plot genus
+plot_bar(physeq_rarefy, fill = "Genus") + 
+  geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack")
+
+# Composition plot - Firmicutes subset and focus on Genus
+physeq_rarefy_firmi <- subset_taxa(physeq_rarefy, Phylum %in% c("Firmicutes"))
+plot_bar(physeq_rarefy_firmi, x="Genus", fill = "Genus", facet_grid = "Condition") +
+  geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack")
+
+# Composition plot - Bacteroidota subset and focus on Genus
+physeq_rarefy_bacte <- subset_taxa(physeq_rarefy, Phylum %in% c("Bacteroidota"))
+plot_bar(physeq_rarefy_bacte, x="Genus", fill = "Genus", facet_grid = "Condition") +
+  geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack")
 
 
 
@@ -187,8 +205,7 @@ pseq_abund
 plot_heatmap(pseq_abund, method = "NMDS", distance = "bray")
 
 # Filter with taxa names
-plot_heatmap(pseq_abund, method = "MDS", distance = "(A+B-2*J)/(A+B-J)", 
-             taxa.label = "Class", taxa.order = "Class")
+#plot_heatmap(pseq_abund, method = "MDS", distance = "(A+B-2*J)/(A+B-J)", taxa.label = "Class", taxa.order = "Class")
 
 
 
@@ -196,12 +213,13 @@ plot_heatmap(pseq_abund, method = "MDS", distance = "(A+B-2*J)/(A+B-J)",
 # Rare curve #
 ##############
 
-tab <- otu_table(physeq_rarefy)
+tab <- otu_table(pseq)
 class(tab) <- "matrix" # as.matrix() will do nothing
 ## you get a warning here, but this is what we need to have
 tab <- t(tab) # transpose observations to rows
 raremax = min(rowSums(tab))
 rare <- rarecurve(tab, step=100, lwd=2, ylab="Richness", sample = raremax, col = "blue", label=F)
+# Si on utilise la méthode de rarefaction pour normaliser les données : la barre vertical indique ou sera coupé nos échantillons, on ne devrait pas perdre de diversité pour aucun des échantillons.
 
 
 
@@ -210,7 +228,7 @@ rare <- rarecurve(tab, step=100, lwd=2, ylab="Richness", sample = raremax, col =
 ###################
 
 plot_richness(pseq, measures=c("observed", "Chao1", "Shannon"))
-
+physeq_rarefy
 
 
 ##############
@@ -219,13 +237,10 @@ plot_richness(pseq, measures=c("observed", "Chao1", "Shannon"))
 
 pseq.ord <- ordinate(pseq_abund, "NMDS", "bray")
 
-plot_ordination(pseq, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", 
-                title="OTUs")
+#plot_ordination(pseq, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", title="OTUs")
 
-plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", 
-                title="OTUs")
-plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Genus", shape= "Genus", 
-                title="OTUs")
+#plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", title="OTUs")
+
 
 
 
