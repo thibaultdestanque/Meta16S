@@ -14,6 +14,13 @@ rm(list=ls())
 ls()
 
 
+####################
+# Install.packages #
+####################
+
+#BiocManager::install("microbiomeutilities")
+
+
 ###############
 ##  Library  ##
 ###############
@@ -28,13 +35,14 @@ library(ggplot2)
 library(tidyr)
 library(devtools)
 library(microbiome)
+library(microbiomeSeq)
 library(upstartr)
 library("easystats")
 library(kableExtra)
 library("network")
 library("hrbrthemes")
 library("readxl")
-
+library("microbiomeutilities")
 
 
 
@@ -42,7 +50,7 @@ library("readxl")
 ## Set working directory ##
 ###########################
 
-setwd("C:/Users/t.destanque/Documents/04_Metagenomic_16S")
+setwd("C:/Users/t.destanque/Documents/04_Metagenomic_16S/raw_data_all_samples")
 
 
 
@@ -50,7 +58,7 @@ setwd("C:/Users/t.destanque/Documents/04_Metagenomic_16S")
 ##  Import abondance table and taxonomy  ##
 ###########################################
 
-Genoscreen_Table_ASV <- read_excel("Genoscreen_Table_ASV_97431.xlsx",skip = 1)
+Genoscreen_Table_ASV <- read_excel("Genoscreen_Table_ASV_97475_97431.xlsx",skip = 1)
 colnames(Genoscreen_Table_ASV)
 colnames(Genoscreen_Table_ASV)[1] = "ASV_ID"
 
@@ -60,7 +68,7 @@ colnames(Genoscreen_Table_ASV)[1] = "ASV_ID"
 ## Import metadata ##
 #####################
 
-metadata    = data.frame(read.table("metadata_methodo.txt",  sep = "\t", header=T, stringsAsFactors = F, check.names=FALSE))
+metadata    = data.frame(read.table("metadata_pigeons_Laetitia.txt",  sep = "\t", header=T, stringsAsFactors = F, check.names=FALSE))
 head(metadata)
 
 
@@ -90,17 +98,18 @@ ASV_table$Taxon = NULL
 colnames(ASV_table)
 
 # On recupére les colonnes de notre projet (MARISA)
+#ASV_table = ASV_table[,1:length(ASV_table)]
 #ASV_table = ASV_table[,c("ASV_ID", "10-V3L1", "11-V13L2", "12-V6L3", "7-V4L1", "8-V2L2", "9-V8L3")]
 
 # On renomme les noms de samples pour qu'ils matchent avec ceux du fichier metadata (on enleve le "[0-9]-")
-#colnames(ASV_table) = gsub(".*-", "", colnames(ASV_table))
-#head(ASV_table)
+colnames(ASV_table) = gsub(".*-", "", colnames(ASV_table))
+head(ASV_table)
 
 # On recupére les colonnes de notre projet (AGNESE)
-ASV_table = ASV_table[,c("ASV_ID", "1-vortex", "2-vortex-centri", "3-BB3c", "4-BB3c-centri", "5-BB9c", "6-BB9c-centri")]
+#ASV_table = ASV_table[,c("ASV_ID", "1-vortex", "2-vortex-centri", "3-BB3c", "4-BB3c-centri", "5-BB9c", "6-BB9c-centri")]
 
 # On renomme les noms de samples pour qu'ils matchent avec ceux du fichier metadata (on enleve le "[0-9]-")
-colnames(ASV_table) = gsub("[0-9]-", "", colnames(ASV_table))
+#colnames(ASV_table) = gsub("[0-9]-", "", colnames(ASV_table))
 #colnames(ASV_table) = gsub("-", "_", colnames(ASV_table))
 head(ASV_table)
 
@@ -212,6 +221,23 @@ plot_bar(physeq_rarefy_p, x="Genus", fill = "Genus", facet_grid = Mygrid) +
   geom_bar(aes(color=Genus, fill=Genus), stat="identity", position="stack") +
   ggtitle(paste0("Proteobacteria subset - focus Genus - Condition:", Mygrid))
 
+# Filter on metadata
+
+metadata_filtered <- metadata %>%
+  filter(grepl("L3", Wash))
+
+sample_names <- sample_names(physeq_rarefy)
+
+metadata_filtered_samples <- metadata_filtered$Sample
+physeq_filtered <- subset_samples(physeq_rarefy, sample_names(physeq_rarefy) %in% metadata_filtered_samples)
+
+# Filtrer physeq_rarefy en fonction de metadata_filtered
+physeq_filtered <- subset_samples(physeq_rarefy, sample_names %in% metadata_filtered$Sample)
+
+# Créer le graphe en utilisant les données filtrées
+plot_bar(physeq_filtered, fill = "Phylum") + 
+  geom_bar(aes(color=Phylum, fill=Phylum), stat="identity", position="stack")
+
 
 ## Species
 
@@ -228,6 +254,25 @@ plot_bar(physeq_rarefy_firmi, x="Specie", fill = "Specie", facet_grid = Mygrid) 
   ggtitle(paste0("Firmicutes subset - focus Specie - Condition:", Mygrid))
 
 
+
+###########
+# Boxplot #
+###########
+
+physeq_df <- microbiomeutilities::phy_to_ldf(physeq, 
+                                             transform.counts = "compositional")
+
+# An additonal column Sam_rep with sample names is created for reference purpose
+colnames(physeq_df)
+
+# Box plot at Family level
+
+ggstripchart(physeq_df, "BodySite", "Abundance", 
+             facet.by = "Family", color = "BodySite",
+             palette = "jco") + rremove("x.text")
+
+
+
 ###########
 # Heatmap #
 ###########
@@ -241,7 +286,7 @@ pseq_abund
 plot_heatmap(pseq_abund, method = "NMDS", distance = "bray")
 
 # Filter with taxa names
-#plot_heatmap(pseq_abund, method = "MDS", distance = "(A+B-2*J)/(A+B-J)", taxa.label = "Class", taxa.order = "Class")
+plot_heatmap(pseq_abund, method = "MDS", distance = "(A+B-2*J)/(A+B-J)", taxa.label = "Class", taxa.order = "Class")
 
 
 
@@ -273,9 +318,9 @@ physeq_rarefy
 
 pseq.ord <- ordinate(pseq_abund, "NMDS", "bray")
 
-#plot_ordination(pseq, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", title="OTUs")
+plot_ordination(pseq, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", title="OTUs")
 
-#plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", title="OTUs")
+plot_ordination(physeq_rarefy, pseq.ord, type="taxa", color="Phylum", shape= "Phylum", title="OTUs")
 
 
 
